@@ -16,3 +16,7 @@
 * [Optional] Run [2.getLatestData.py](./2.getLatestData.py) to read data from Riak DB in 5sec intervals
 
 * Run [3.syncMongoDB.py](./3.syncMongoDB.py) to read data from Riak DB and insert it into MongoDB, in 5sec intervals
+
+## Tips and Tricks
+
+You can connect to Riak Explorer at this [address](http://localhost:8098/admin/#/cluster/default/data)
