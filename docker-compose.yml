@@ -1,0 +1,38 @@
+version: "2"
+
+services:
+  riak-coordinator:
+    image: basho/riak-kv
+    ports:
+      - "8087:8087"
+      - "8098:8098"
+    environment:
+      - CLUSTER_NAME=riakkv
+    labels:
+      - "com.basho.riak.cluster.name=riakkv"
+    volumes:
+      - schemas:/etc/riak/schemas
+  riak-member:
+    image: basho/riak-kv
+    ports:
+      - "8087"
+      - "8098"
+    labels:
+      - "com.basho.riak.cluster.name=riakkv"
+    links:
+      - riak-coordinator
+    depends_on:
+      - riak-coordinator
+    environment:
+      - CLUSTER_NAME=riakkv
+      - COORDINATOR_NODE=riak-coordinator
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+
+volumes:
+  schemas:
+    external: false
