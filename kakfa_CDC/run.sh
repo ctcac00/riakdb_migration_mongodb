@@ -59,6 +59,20 @@ test_systems_available 8083
 
 trap clean_up EXIT
 
+echo -e "\nConfiguring the MongoDB ReplicaSet.\n"
+docker-compose exec mongo1 /usr/bin/mongo --eval '''if (rs.status()["ok"] == 0) {
+    rsconf = {
+      _id : "rs0",
+      members: [
+        { _id : 0, host : "mongo1:27017", priority: 1.0 },
+        { _id : 1, host : "mongo2:27017", priority: 0.5 },
+        { _id : 2, host : "mongo3:27017", priority: 0.5 }
+      ]
+    };
+    rs.initiate(rsconf);
+}
+rs.conf();'''
+
 echo -e "\nKafka Connectors:"
 curl -X GET "http://localhost:8083/connectors/" -w "\n"
 
@@ -69,12 +83,25 @@ curl -X POST -H "Content-Type: application/json" --data '
      "connector.class":"com.mongodb.kafka.connect.MongoSinkConnector",
      "tasks.max":"1",
      "topics":"patients",
-     "connection.uri":"mongodb://mongo:27017",
+     "connection.uri":"mongodb://mongo1:27017,mongo2:27017,mongo3:27017",
      "database":"test",
      "collection":"patients",
      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
      "value.converter.schemas.enable": "false"
+}}' http://localhost:8083/connectors -w "\n"
+
+sleep 2
+echo -e "\nAdding MongoDB Kafka Source Connector for the 'test.patients' collection:"
+curl -X POST -H "Content-Type: application/json" --data '
+  {"name": "mongo-source",
+   "config": {
+     "tasks.max":"1",
+     "connector.class":"com.mongodb.kafka.connect.MongoSourceConnector",
+     "connection.uri":"mongodb://mongo1:27017,mongo2:27017,mongo3:27017",
+     "topic.prefix":"mongo",
+     "database":"test",
+     "collection":"patients"
 }}' http://localhost:8083/connectors -w "\n"
 
 sleep 2
@@ -84,10 +111,10 @@ curl -X GET "http://localhost:8083/connectors/" -w "\n"
 echo -e '''
 
 ==============================================================================================================
-Examine the topics in the Kafka UI: http://localhost:9021 or http://localhost:8000/
+Examine the topics in the Kafka UI: http://localhost:9021
  
 Examine the collections:
-  - In your shell run: docker-compose exec mongo /usr/bin/mongo
+  - In your shell run: docker-compose exec mongo1 /usr/bin/mongo
 ==============================================================================================================
 
 Use <ctrl>-c to quit'''

@@ -121,15 +121,39 @@ services:
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
 
-  mongo:
+   # MongoDB Replica Set
+  mongo1:
     image: "mongo"
-    container_name: mongo
+    container_name: mongo1
+    command: --replSet rs0
     volumes:
-      - data:/data/db
+      - rs1:/data/db
     networks:
       - localnet
     ports:
       - "27017:27017"
+    restart: always
+  mongo2:
+    image: "mongo"
+    container_name: mongo2
+    command: --replSet rs0
+    volumes:
+      - rs2:/data/db
+    networks:
+      - localnet
+    ports:
+      - "27018:27017"
+    restart: always
+  mongo3:
+    image: "mongo"
+    container_name: mongo3
+    command: --replSet rs0
+    volumes:
+      - rs3:/data/db
+    networks:
+      - localnet
+    ports:
+      - "27019:27017"
     restart: always
 
   riak-coordinator:
@@ -170,6 +194,8 @@ networks:
     attachable: true
 
 volumes:
-  data:
+  rs1:
+  rs2:
+  rs3:
   schemas:
     external: false
