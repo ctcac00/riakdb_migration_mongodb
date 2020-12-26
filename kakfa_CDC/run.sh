@@ -23,7 +23,7 @@ docker-compose up -d --build
 function clean_up {
     echo -e "\n\nSHUTTING DOWN\n\n"
     curl --output /dev/null -X DELETE http://localhost:8083/connectors/mongo-sink || true
-    docker-compose exec mongo /usr/bin/mongo --eval "db.dropDatabase()"
+    docker-compose exec mongo1 /usr/bin/mongo --eval "db.dropDatabase()"
     docker-compose down
     if [ -z "$1" ]
     then
